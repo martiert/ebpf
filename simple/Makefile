@@ -1,0 +1,41 @@
+APP=exec
+
+# this is for using distribution provided bpftool
+BPFTOOL=$(shell which bpftool)
+
+CFLAGS:=-O3 -iquote out/include
+
+CFLAGS+=$(shell pkg-config --cflags libbpf)
+LDFLAGS=$(shell pkg-config --libs libbpf)
+
+.PHONY: all
+all: out/exec
+
+out/include:
+	mkdir --parent $@
+
+out/include/vmlinux.h: Makefile out/include
+	@echo [VMLINUX] $@
+	@${BPFTOOL} btf dump file /sys/kernel/btf/vmlinux format c > $@
+
+out/%.bpf.o: %.bpf.c out/include/vmlinux.h
+	@echo [BPF] $@
+	@clang ${CFLAGS} -target bpf -D__TARGET_ARCH_x86_64 -c -o $@ $<
+
+out/include/exec.skel.h: out/exec.bpf.o
+	@echo [SKEL] $@
+	@${BPFTOOL} gen skeleton $< name exec > $@
+
+out/%.o: %.c out/include/%.skel.h
+	@echo [CC] $@
+	@clang ${CFLAGS} -c -o $@ $<
+
+out/exec: out/exec.o
+	@echo [LD] $@
+	@clang $< ${LDFLAGS} -o $@
+
+run: out/exec
+	@sudo $<
+
+clean:
+	-rm -rf out
