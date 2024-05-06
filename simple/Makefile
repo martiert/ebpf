@@ -14,7 +14,7 @@ BPFFLAGS+=-fno-stack-protector -Wno-unused-command-line-argument
 all: out/exec
 
 out/include:
-	mkdir --parent $@
+	@mkdir --parent $@
 
 out/include/vmlinux.h: Makefile out/include
 	@echo "[VMLINUX] $@"
@@ -22,7 +22,7 @@ out/include/vmlinux.h: Makefile out/include
 
 out/%.bpf.o: %.bpf.c out/include/vmlinux.h
 	@echo "[BPF]     $@"
-	clang ${BPFFLAGS} -c -o $@ $<
+	@clang ${BPFFLAGS} -c -o $@ $<
 
 out/include/exec.skel.h: out/exec.bpf.o
 	@echo "[SKEL]    $@"
