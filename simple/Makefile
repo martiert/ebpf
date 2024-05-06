@@ -28,9 +28,9 @@ out/include/exec.skel.h: out/exec.bpf.o
 	@echo "[SKEL]    $@"
 	@${BPFTOOL} gen skeleton $< name exec > $@
 
-out/%.o: %.c out/include/%.skel.h event.h
+out/%.o: %.cpp out/include/%.skel.h event.h
 	@echo "[CC]      $@"
-	@clang ${CFLAGS} -c -o $@ $<
+	@clang++ ${CFLAGS} -c -o $@ $<
 
 out/exec: out/exec.o
 	@echo "[LD]      $@"
