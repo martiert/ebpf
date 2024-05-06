@@ -1,5 +1,3 @@
-APP=exec
-
 # this is for using distribution provided bpftool
 BPFTOOL=$(shell which bpftool)
 
@@ -8,6 +6,10 @@ CFLAGS:=-O3 -iquote out/include
 CFLAGS+=$(shell pkg-config --cflags libbpf)
 LDFLAGS=$(shell pkg-config --libs libbpf)
 
+BPFFLAGS:=${CFLAGS}
+BPFFLAGS+=-target bpf
+BPFFLAGS+=-fno-stack-protector # 
+
 .PHONY: all
 all: out/exec
 
@@ -15,27 +17,29 @@ out/include:
 	mkdir --parent $@
 
 out/include/vmlinux.h: Makefile out/include
-	@echo [VMLINUX] $@
+	@echo "[VMLINUX] $@"
 	@${BPFTOOL} btf dump file /sys/kernel/btf/vmlinux format c > $@
 
 out/%.bpf.o: %.bpf.c out/include/vmlinux.h
-	@echo [BPF] $@
-	@clang ${CFLAGS} -target bpf -D__TARGET_ARCH_x86_64 -c -o $@ $<
+	@echo "[BPF]     $@"
+	clang ${BPFFLAGS} -c -o $@ $<
 
 out/include/exec.skel.h: out/exec.bpf.o
-	@echo [SKEL] $@
+	@echo "[SKEL]    $@"
 	@${BPFTOOL} gen skeleton $< name exec > $@
 
 out/%.o: %.c out/include/%.skel.h
-	@echo [CC] $@
+	@echo "[CC]      $@"
 	@clang ${CFLAGS} -c -o $@ $<
 
 out/exec: out/exec.o
-	@echo [LD] $@
+	@echo "[LD]      $@"
 	@clang $< ${LDFLAGS} -o $@
 
 run: out/exec
+	@echo "[RUN]     $<"
 	@sudo $<
 
 clean:
-	-rm -rf out
+	@echo "[CLEAN] out"
+	@-rm -rf out
