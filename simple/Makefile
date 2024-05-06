@@ -6,7 +6,7 @@ CFLAGS:=-O3 -iquote out/include
 CFLAGS+=$(shell pkg-config --cflags libbpf)
 LDFLAGS=$(shell pkg-config --libs libbpf)
 
-BPFFLAGS:=${CFLAGS}
+BPFFLAGS:=${CFLAGS} -g
 BPFFLAGS+=-target bpf
 BPFFLAGS+=-fno-stack-protector # 
 
