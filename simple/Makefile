@@ -20,7 +20,7 @@ out/include/vmlinux.h: Makefile out/include
 	@echo "[VMLINUX] $@"
 	@${BPFTOOL} btf dump file /sys/kernel/btf/vmlinux format c > $@
 
-out/%.bpf.o: %.bpf.c out/include/vmlinux.h
+out/%.bpf.o: %.bpf.c out/include/vmlinux.h event.h
 	@echo "[BPF]     $@"
 	@clang ${BPFFLAGS} -c -o $@ $<
 
@@ -28,7 +28,7 @@ out/include/exec.skel.h: out/exec.bpf.o
 	@echo "[SKEL]    $@"
 	@${BPFTOOL} gen skeleton $< name exec > $@
 
-out/%.o: %.c out/include/%.skel.h
+out/%.o: %.c out/include/%.skel.h event.h
 	@echo "[CC]      $@"
 	@clang ${CFLAGS} -c -o $@ $<
 
