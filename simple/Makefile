@@ -8,7 +8,7 @@ LDFLAGS=$(shell pkg-config --libs libbpf)
 
 BPFFLAGS:=${CFLAGS} -g
 BPFFLAGS+=-target bpf
-BPFFLAGS+=-fno-stack-protector # 
+BPFFLAGS+=-fno-stack-protector -Wno-unused-command-line-argument
 
 .PHONY: all
 all: out/exec
