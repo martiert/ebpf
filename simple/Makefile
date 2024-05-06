@@ -4,7 +4,9 @@ BPFTOOL=$(shell which bpftool)
 CFLAGS:=-O3 -iquote out/include
 
 CFLAGS+=$(shell pkg-config --cflags libbpf)
+CFLAGS+=$(shell pkg-config --cflags fmt)
 LDFLAGS=$(shell pkg-config --libs libbpf)
+LDFLAGS+=$(shell pkg-config --libs fmt)
 
 BPFFLAGS:=${CFLAGS} -g
 BPFFLAGS+=-target bpf
@@ -34,7 +36,7 @@ out/%.o: %.cpp out/include/%.skel.h event.h
 
 out/exec: out/exec.o
 	@echo "[LD]      $@"
-	@clang $< ${LDFLAGS} -o $@
+	@clang++ $< ${LDFLAGS} -o $@
 
 run: out/exec
 	@echo "[RUN]     $<"

@@ -3,6 +3,8 @@
 
 #include <bpf/libbpf.h>
 
+#include <fmt/format.h>
+
 #include <sys/epoll.h>
 #include <sys/resource.h>
 #include <sys/poll.h>
@@ -14,16 +16,22 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <map>
+#include <functional>
+
 #define MAX_EVENTS 100
 
-static int libbpf_print_callback(enum libbpf_print_level level, const char * format, va_list args)
+namespace
+{
+
+int libbpf_print_callback(libbpf_print_level level, const char * format, va_list args)
 {
     if (level > LIBBPF_INFO)
         return 0;
     return vfprintf(stderr, format, args);
 }
 
-static void bump_memlock_rlimit()
+void bump_memlock_rlimit()
 {
     rlimit rlim = {
         .rlim_cur = RLIM_INFINITY,
@@ -36,29 +44,158 @@ static void bump_memlock_rlimit()
     }
 }
 
-static int handle_event(void * ctx, void * data, size_t size)
+int handle_event(void *, void * data, size_t)
 {
     const event * e = reinterpret_cast<event*>(data);
-    printf("%-5s %-7d %-7d\n", "CLONE", e->pid, e->ppid);
+    fmt::print("{} {} {}\n", "CLONE", e->pid, e->ppid);
 
     return 0;
 }
 
-static volatile bool exiting = false;
+volatile bool exiting = false;
 
-static void sig_handler(int sig)
+void sig_handler(int sig)
 {
     exiting = true;
 }
 
+class Poller
+{
+public:
+    Poller()
+        : fd_(epoll_create1(0))
+    {
+        if (fd_ == -1) {
+            perror("epoll_create1");
+            throw 1;
+        }
+    }
+
+    ~Poller()
+    {
+        close(fd_);
+    }
+
+    void register_callback(int fd, std::function<void (int)> callback)
+    {
+        map_.emplace(fd, callback);
+        epoll_event ev;
+        ev.events = EPOLLIN;
+        ev.data.fd = fd;
+        if (epoll_ctl(fd_, EPOLL_CTL_ADD, fd, &ev)) {
+            perror("epoll_ctl: events_fd");
+            throw 1;
+        }
+    }
+
+    void run_once()
+    {
+        epoll_event events[MAX_EVENTS];
+        int nfds = epoll_wait(fd_, events, MAX_EVENTS, -1);
+        if (nfds == -1 && errno != EINTR) {
+            perror("epoll_wait");
+            throw 1;
+        }
+        for (int n = 0; n < nfds; ++n) {
+            int fd = events[n].data.fd;
+            auto entry = map_.find(fd);
+            if (entry == map_.end()) {
+                fmt::print("Got an unknown file descriptor: {}\n", fd);
+                throw 1;
+            }
+            entry->second(fd);
+        }
+    }
+
+private:
+    int fd_;
+    std::map<int, std::function<void (int)>> map_;
+};
+
+class RingBuffer
+{
+public:
+    explicit RingBuffer(ring_buffer * rb)
+        : rb_(rb)
+    {
+        if (!rb_) {
+            perror("creating ringbuffer");
+            throw 1;
+        }
+    }
+
+    ~RingBuffer()
+    {
+        if (rb_)
+            ring_buffer__free(rb_);
+    }
+
+    int fd() const
+    {
+        return ring_buffer__epoll_fd(rb_);
+    }
+
+    bool consume()
+    {
+        int err = ring_buffer__consume(rb_);
+        if (err < 0) {
+            perror("consuming event from ringbuffer");
+            throw 1;
+        }
+        return err != -EINTR;
+    }
+
+private:
+    ring_buffer * rb_;
+};
+
+class Skeleton
+{
+public:
+    Skeleton()
+        : skel_(exec__open())
+    {
+        if (!skel_) {
+            perror("Opening skeleton");
+            throw 1;
+        }
+        int err = exec__load(skel_);
+        if (err) {
+            perror("Loading skeleton");
+            throw 1;
+        }
+        err = exec__attach(skel_);
+        if (err) {
+            perror("Attaching skeleton");
+            throw 1;
+        }
+    }
+
+    ~Skeleton()
+    {
+        if (skel_)
+            exec__destroy(skel_);
+    }
+
+    RingBuffer events(ring_buffer_sample_fn cb) const
+    {
+        return RingBuffer(ring_buffer__new(bpf_map__fd(skel_->maps.events), cb, NULL, NULL));
+    }
+
+    void set_pid(int pid)
+    {
+        skel_->bss->pid = pid;
+    }
+
+private:
+    exec * skel_ = nullptr;
+};
+
+}
+
 int main(int argc, char ** argv)
 {
-    ring_buffer * rb = NULL;
-    exec * skel;
     int err;
-    epoll_event ev, events[MAX_EVENTS];
-    int epollfd;
-    int events_fd;
 
     libbpf_set_print(libbpf_print_callback);
 
@@ -67,88 +204,24 @@ int main(int argc, char ** argv)
     signal(SIGINT, sig_handler);
     signal(SIGTERM, sig_handler);
 
-    skel = exec__open();
-    if (!skel) {
-        fprintf(stderr, "Failed to open skel\n");
-        return 1;
-    }
-    err = exec__load(skel);
-    if (err) {
-        fprintf(stderr, "Failed to load skel\n");
-        return 1;
-    }
-    err = exec__attach(skel);
-    if (err) {
-        fprintf(stderr, "Failed to attach skel\n");
-        goto cleanup;
-    }
+    Skeleton skeleton;
+    RingBuffer rb = skeleton.events(handle_event);
 
-    rb = ring_buffer__new(bpf_map__fd(skel->maps.events), handle_event, NULL, NULL);
-    if (!rb) {
-        err = -1;
-        fprintf(stderr, "Failed create ringbuffer\n");
-        goto cleanup;
-    }
+    Poller poller;
+    poller.register_callback(rb.fd(), [&rb](int) { rb.consume(); });
+    poller.register_callback(STDIN_FILENO, [&skeleton](int fd) { 
+            struct pollfd fds;
+            char buffer[128];
 
-    events_fd = ring_buffer__epoll_fd(rb);
+            fds.fd = STDIN_FILENO;
+            fds.events = POLLIN;
 
-    epollfd = epoll_create1(0);
-    if (epollfd == -1) {
-        perror("epoll_create1");
-        err = -1;
-        goto cleanup;
-    }
-    ev.events = EPOLLIN;
-    ev.data.fd = events_fd;
-    err = epoll_ctl(epollfd, EPOLL_CTL_ADD, events_fd, &ev);
-    if (err) {
-        perror("epoll_ctl: events_fd");
-        goto cleanup_epoll;
-    }
-    ev.events = EPOLLIN;
-    ev.data.fd = STDIN_FILENO;
-    err = epoll_ctl(epollfd, EPOLL_CTL_ADD, STDIN_FILENO, &ev);
-    if (err) {
-        perror("epoll_ctl: stdin");
-        goto cleanup_epoll;
-    }
+            while (poll(&fds, 1, 0))
+                (void) read(STDIN_FILENO, buffer, sizeof buffer);
+            skeleton.set_pid(atoi(buffer));
+        });
+
     while (!exiting) {
-        int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
-        if (nfds == -1) {
-            perror("epoll_wait");
-            break;
-        }
-        for (int n = 0; n < nfds; ++n) {
-            if (events[n].data.fd == events_fd) {
-                err = ring_buffer__consume(rb);
-                if (err == -EINTR) {
-                    err = 0;
-                    break;
-                }
-                if (err < 0) {
-                    printf("Error polling ringbuffer: %d\n", err);
-                    break;
-                }
-            }
-            if (events[n].data.fd == STDIN_FILENO) {
-                struct pollfd fds;
-                char buffer[128];
-
-                fds.fd = STDIN_FILENO;
-                fds.events = POLLIN;
-
-                while (poll(&fds, 1, 0))
-                    (void) read(STDIN_FILENO, buffer, sizeof buffer);
-                skel->bss->pid = atoi(buffer);
-                printf("Got from stdin: %s\n", buffer);
-            }
-        }
+        poller.run_once();
     }
-
-cleanup_epoll:
-    close(epollfd);
-cleanup:
-    ring_buffer__free(rb);
-    exec__destroy(skel);
-    return err;
 }

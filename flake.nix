@@ -18,6 +18,7 @@
         libbpf
         libelf
         bpftools
+        fmt.dev
 
         pkg-config
       ];
