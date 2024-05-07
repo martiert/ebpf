@@ -7,17 +7,13 @@
 
 #include <sys/epoll.h>
 #include <sys/resource.h>
-#include <sys/poll.h>
-
-#include <unistd.h>
-#include <string.h>
 #include <signal.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
 
+#include <string>
 #include <map>
 #include <functional>
+#include <iostream>
 
 #define MAX_EVENTS 100
 
@@ -39,7 +35,7 @@ void bump_memlock_rlimit()
     };
 
     if(setrlimit(RLIMIT_MEMLOCK, &rlim)) {
-        fprintf(stderr, "Failed to increase RLIMIT: %s\n", strerror(errno));
+        perror("Failed to increase RLIMIT");
         exit(1);
     }
 }
@@ -47,7 +43,7 @@ void bump_memlock_rlimit()
 int handle_event(void *, void * data, size_t)
 {
     const event * e = reinterpret_cast<event*>(data);
-    fmt::print("{} {} {}\n", "CLONE", e->pid, e->ppid);
+    fmt::print("{} {} {} {}\n", "CLONE", e->pid, e->ppid, e->command);
 
     return 0;
 }
@@ -209,16 +205,10 @@ int main(int argc, char ** argv)
 
     Poller poller;
     poller.register_callback(rb.fd(), [&rb](int) { rb.consume(); });
-    poller.register_callback(STDIN_FILENO, [&skeleton](int fd) { 
-            struct pollfd fds;
-            char buffer[128];
-
-            fds.fd = STDIN_FILENO;
-            fds.events = POLLIN;
-
-            while (poll(&fds, 1, 0))
-                (void) read(STDIN_FILENO, buffer, sizeof buffer);
-            skeleton.set_pid(atoi(buffer));
+    poller.register_callback(STDIN_FILENO, [&skeleton](int) { 
+            int pid;
+            std::cin >> pid;
+            skeleton.set_pid(pid);
         });
 
     while (!exiting) {

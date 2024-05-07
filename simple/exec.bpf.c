@@ -20,21 +20,14 @@ static int handle_clone_common(struct trace_event_raw_sys_enter * ctx)
     tgid = bpf_get_current_pid_tgid() >> 32;
     event.pid = tgid;
     event.ppid = BPF_CORE_READ(task, real_parent, tgid);
-
-    if (event.ppid != pid)
-        return 0;
+    char * command = (char*) BPF_CORE_READ(ctx, args[0]);
+    bpf_probe_read_user_str(event.command, MAX_COMMAND, command);
     bpf_ringbuf_output(&events, &event, sizeof(event), 0);
     return 0;
 }
 
-SEC("tp/syscalls/sys_enter_clone")
+SEC("tp/syscalls/sys_enter_execve")
 int handle_clone(struct trace_event_raw_sys_enter * ctx)
-{
-    return handle_clone_common(ctx);
-}
-
-SEC("tp/syscalls/sys_enter_clone3")
-int handle_clone3(struct trace_event_raw_sys_enter * ctx)
 {
     return handle_clone_common(ctx);
 }
