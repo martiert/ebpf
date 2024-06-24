@@ -43,7 +43,7 @@ void bump_memlock_rlimit()
 int handle_event(void *, void * data, size_t)
 {
     const event * e = reinterpret_cast<event*>(data);
-    fmt::print("{} {} {} {}\n", "CLONE", e->pid, e->ppid, e->command);
+    fmt::print("{} {} {} {}\n", "EXECVE", e->pid, e->ppid, e->command);
 
     return 0;
 }
@@ -178,9 +178,8 @@ public:
         return RingBuffer(ring_buffer__new(bpf_map__fd(skel_->maps.events), cb, NULL, NULL));
     }
 
-    void set_pid(int pid)
-    {
-        skel_->bss->pid = pid;
+    exec * operator->() {
+        return skel_;
     }
 
 private:
@@ -206,9 +205,10 @@ int main(int argc, char ** argv)
     Poller poller;
     poller.register_callback(rb.fd(), [&rb](int) { rb.consume(); });
     poller.register_callback(STDIN_FILENO, [&skeleton](int) { 
-            int pid;
+            std::string pid;
             std::cin >> pid;
-            skeleton.set_pid(pid);
+            auto hash = hash_value(pid.c_str());
+            bpf_map__update_elem(skeleton->maps.exec_names, (const void*)&hash, sizeof(unsigned long), (const void*)&hash, sizeof(unsigned long), BPF_NOEXIST);
         });
 
     while (!exiting) {
