@@ -129,7 +129,10 @@ void Cgroup::create(int pid, std::string const & size)
     fs::create_directory(path);
 
     write_file(path / "cgroup.procs", pid_name);
-    write_file(path / "memory.max", size);
+    if (is_cgroup_v1())
+        write_file(path / "memory.limit_in_bytes", size);
+    else
+        write_file(path / "memory.max", size);
 }
 
 void Cgroup::remove(pid_t pid)
