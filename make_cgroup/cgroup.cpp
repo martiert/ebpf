@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include <error.h>
 
+#include <ranges>
+#include <vector>
+#include <fstream>
 #include <string_view>
 #include <thread>
 #include <chrono>
@@ -16,6 +19,8 @@ namespace
 {
 
 const fs::path cgroup_base_path("/sys/fs/cgroup");
+fs::path path;
+bool is_v1;
 
 void write_file(fs::path const & path, std::string_view data)
 {
@@ -27,30 +32,74 @@ void write_file(fs::path const & path, std::string_view data)
         perror(fmt::format("Write {} to {}", data, path.string()).c_str());
 }
 
+struct MountInfo
+{
+    std::string source;
+    std::string path;
+    std::string type;
+    std::vector<std::string> flags;
+};
+
+void parse_cgroup_info()
+{
+    static bool parsed = false;
+    if (parsed)
+        return;
+
+    std::vector<MountInfo> info;
+    std::ifstream fs("/proc/self/mounts");
+    std::string line;
+    while (std::getline(fs, line)) {
+        std::vector<std::string_view> parts;
+        auto split = std::views::split(line, ' ');
+        auto it = split.begin();
+        std::string_view source(*it);
+        if (source == "cgroup" || source == "cgroup2") {
+            MountInfo m;
+            m.source = std::string_view(*it);
+            ++it;
+            m.path = std::string_view(*it);
+            ++it;
+            m.type = std::string_view(*it);
+            ++it;
+
+            for (auto const & w : std::views::split(*it, ','))
+                m.flags.emplace_back(std::string_view(w));
+            info.push_back(m);
+        }
+    }
+    MountInfo result;
+    for (auto const & i : info) {
+        if (i.type == "cgroup2") {
+            result = i;
+        } else {
+            if (std::find(i.flags.begin(), i.flags.end(), "memory") != i.flags.end()) {
+                result = i;
+                break;
+            }
+        }
+    }
+    path = result.path;
+    is_v1 = result.type == "cgroup";
+    parsed = true;
+}
+
 bool is_cgroup_v1()
 {
-    static bool searched = false;
-    static bool is_v1;
-    if (searched)
-        return is_v1;
-
-    is_v1 = !fs::exists(cgroup_base_path / "cgroup.procs");
+    parse_cgroup_info();
     return is_v1;
 }
 
 fs::path cgroup_path()
 {
-    fs::path cgroup = cgroup_base_path;
-    if (is_cgroup_v1()) {
-        cgroup /= "memory/ebpf_managed";
-        fs::create_directory(cgroup);
-        return cgroup;
-    }
+    parse_cgroup_info();
+    if (!is_cgroup_v1())
+        write_file(path / "cgroup.subtree_control", "+memory");
 
-    write_file(cgroup / "cgroup.subtree_control", "+memory");
-    cgroup = cgroup / "ebpf_managed";
+    auto cgroup = path / "ebpf_managed";
     fs::create_directory(cgroup);
-    write_file(cgroup / "cgroup.subtree_control", "+memory");
+    if (!is_cgroup_v1())
+        write_file(cgroup / "cgroup.subtree_control", "+memory");
     return cgroup;
 }
 

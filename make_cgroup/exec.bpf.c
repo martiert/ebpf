@@ -60,7 +60,7 @@ int handle_exit(struct trace_event_raw_sched_process_template * ctx)
         return 0;
 
     pid_t * found = bpf_map_lookup_elem(&monitored, &pid);
-    if (!bpf_map_lookup_elem(&monitored, &pid))
+    if (bpf_map_delete_elem(&monitored, &pid) != 0)
         return 0;
 
     struct event event={0};

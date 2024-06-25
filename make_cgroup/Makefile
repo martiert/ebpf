@@ -32,7 +32,7 @@ out/include/exec.skel.h: out/exec.bpf.o
 
 out/%.o: %.cpp out/include/exec.skel.h event.h
 	@echo "[CC]      $@"
-	@clang++ ${CFLAGS} -c -o $@ $<
+	@clang++ ${CFLAGS} -std=c++23 -c -o $@ $<
 
 out/exec: out/exec.o out/poller.o out/cgroup.o
 	@echo "[LD]      $@"
