@@ -96,20 +96,6 @@ std::map<std::string, std::string> parse(int argc, char ** argv)
     return result;
 }
 
-int enter_cgroup(std::map<std::string, std::string> const & cgroups,
-        Cgroup & cgroup_handler,
-        int pid,
-        std::string && command)
-{
-    auto entry = cgroups.find(command);
-    if (entry == cgroups.end()) {
-        fmt::print(stderr, "No cgroup set up for command {}\n", command);
-        return 0;
-    }
-    cgroup_handler.create(pid, entry->second);
-    return 0;
-}
-
 }
 
 int main(int argc, char ** argv)
@@ -133,11 +119,19 @@ int main(int argc, char ** argv)
 
     auto rb = skeleton.events([&cgroups, &cgroup_handler](event * e) {
         switch (e->type) {
-            case Type_execve:
-                return enter_cgroup(cgroups, cgroup_handler, e->pid, e->command);
-            case Type_exit:
-                fmt::print("{} {} {}\n", "EXIT", e->pid, e->ppid);
+            case Type_execve: {
+                auto entry = cgroups.find(e->command);
+                if (entry == cgroups.end()) {
+                    fmt::print(stderr, "No cgroup set up for command {}\n", e->command);
+                    return 0;
+                }
+                cgroup_handler.create(e->pid, entry->second);
                 break;
+            }
+            case Type_exit: {
+                cgroup_handler.remove(e->pid);
+                break;
+            }
         }
         return 0;
     });

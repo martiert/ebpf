@@ -7,6 +7,8 @@
 #include <error.h>
 
 #include <string_view>
+#include <thread>
+#include <chrono>
 
 namespace fs = std::filesystem;
 
@@ -58,6 +60,11 @@ Cgroup::Cgroup()
     : path_(cgroup_path())
     , is_v1_(is_cgroup_v1())
 {
+    std::error_code ec;
+    for (auto const & e : fs::directory_iterator(path_)) {
+        if (fs::is_directory(e.path()))
+            fs::remove(e.path(), ec);
+    }
 }
 
 Cgroup::~Cgroup()
@@ -74,4 +81,21 @@ void Cgroup::create(int pid, std::string const & size)
 
     write_file(path / "cgroup.procs", pid_name);
     write_file(path / "memory.max", size);
+}
+
+void Cgroup::remove(pid_t pid)
+{
+    auto pid_name = fmt::format("{}", pid);
+    auto path = path_ / pid_name;
+    std::error_code ec;
+
+    int count = 0;
+    fs::remove(path, ec);
+    while (ec && count < 100) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        fs::remove(path, ec);
+        ++count;
+    }
+    if (ec)
+        perror(fmt::format("Failed removing cgroup", path.string()).c_str());
 }

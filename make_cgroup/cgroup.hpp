@@ -11,6 +11,7 @@ public:
     ~Cgroup();
 
     void create(int pid, std::string const & size);
+    void remove(pid_t pid);
 
 private:
     std::filesystem::path path_;
