@@ -9,19 +9,34 @@
   outputs = { self, nixpkgs, flake-utils }: 
   flake-utils.lib.eachDefaultSystem (system: let
     pkgs = import nixpkgs { inherit system; };
-  in {
-    devShells.default = pkgs.mkShell {
-      packages = with pkgs; [
-        gnumake
-        clang
+  in rec {
+    packages = {
+      presentation = pkgs.callPackage ./presentation {
+        date = toString self.lastModified;
+      };
+      presenter = pkgs.writeShellScriptBin "present" ''
+        ${pkgs.beamerpresenter}/bin/beamerpresenter ${packages.presentation}/ebpf.pdf
+      '';
+      default = packages.presenter;
+    };
+    devShells = {
+      default = pkgs.mkShell {
+        packages = with pkgs; [
+          gnumake
+          clang
 
-        libbpf
-        libelf
-        bpftools
-        fmt.dev
+          libbpf
+          libelf
+          bpftools
+          fmt.dev
 
-        pkg-config
-      ];
+          pkg-config
+        ];
+      };
+      presentation = pkgs.mkShell {
+        inputsFrom = [ packages.presentation ];
+        packages = [ pkgs.beamerpresenter ];
+      };
     };
   });
 }

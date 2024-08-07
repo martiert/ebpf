@@ -1,0 +1,36 @@
+\mode<presentation>
+
+% Requirement
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+
+% Settings
+\useinnertheme{ciscolysaker}
+\useoutertheme{ciscolysaker}
+\usecolortheme{ciscolysaker}
+
+\setbeamertemplate{itemize item}{\usebeamerfont*{itemize item}\raise2.5pt\hbox{\donotcoloroutermaths$\bullet$}}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+% All of this is needed for custom fonts
+% \usepackage{fontspec}
+\usefonttheme{professionalfonts}
+\usefonttheme{serif}
+
+% \setmainfont[
+%     Path = fonts/,
+%     Extension = .ttf,
+%     Ligatures=TeX,
+%     UprightFont = *ExtraLight,
+%     ItalicFont = *ExtraLightOblique,
+%     BoldFont = *Medium,
+%     BoldItalicFont = *MediumOblique,
+% ]{CiscoSansTT}
+
+\setbeamerfont{itemize item}{size=\fontsize{5}{5}\selectfont}
+\setbeamerfont{normal text}{size=\small}
+\setbeamerfont{footline}{size=\fontsize{4}{6}\selectfont}
+\setbeamerfont{title}{size=\Huge\selectfont}
+
+\mode<all>

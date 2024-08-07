@@ -1,0 +1,61 @@
+\mode<presentation>
+
+\usepackage{textpos}
+
+% Title page
+\defbeamertemplate*{title page}{texsx}[1][]
+{ 
+    % The "plus 1filll" part ensures that long titles and subtitles extend
+    % upwards instead of pushing the rest of the text down
+    \vskip0pt plus 1filll%
+    \begin{beamercolorbox}[wd=.85\paperwidth,leftskip=-.5cm,#1]{title page header}
+        \usebeamerfont{title}\inserttitle\par%
+    \end{beamercolorbox}%
+    \vskip0.3cm%
+    \begin{beamercolorbox}[wd=.85\paperwidth,leftskip=-.5cm,#1]{title page header}
+        \usebeamerfont{subtitle}\insertsubtitle\par%
+    \end{beamercolorbox}%
+    \vskip0.8cm%
+    \begin{beamercolorbox}[wd=.85\paperwidth,leftskip=-.5cm,#1]{author}
+        \usebeamerfont{author}\insertauthor\par%
+    \end{beamercolorbox}
+    \vskip0.2cm%
+    \begin{beamercolorbox}[wd=.85\paperwidth,leftskip=-.5cm,#1]{date}
+        \usebeamerfont{author}\insertdate\par%
+    \end{beamercolorbox}
+    \vskip0.5cm%
+}
+
+\makeatletter
+\def\ps@navigation@titlepage{%
+  \setbeamercolor{background canvas}{bg=Blue}
+  \@nameuse{ps@navigation}}
+
+\addtobeamertemplate{title page}{\thispagestyle{navigation@titlepage}}{}
+\makeatother
+
+\makeatletter
+\setbeamertemplate{footline}
+{
+    \leavevmode%
+    \hbox{%
+      \begin{beamercolorbox}[wd=.85\paperwidth,ht=2.25ex,dp=1ex,left]{date in head/foot}%
+          \usebeamerfont{date in head/foot}%
+          \hspace*{3em}%
+          \ifnum \insertpagenumber=1
+            % \hbox{© 2020 Cisco Systems, Inc. All rights reserved.}%
+          \else
+            \insertframenumber{}\hspace*{2em}\hspace*{1em}/\hspace*{1em}\insertframetitle
+          \fi
+      \end{beamercolorbox}%
+    }%
+    \vskip3em%
+}%
+\makeatother
+
+\addtobeamertemplate{headline}{}{%
+\begin{textblock*}{100mm}(.90\textwidth,.5cm)
+\end{textblock*}}
+
+\mode
+<all>

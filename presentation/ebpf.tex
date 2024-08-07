@@ -1,0 +1,171 @@
+\documentclass[aspectratio=169]{beamer}
+
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{dirtytalk}
+\usepackage{pgfpages}
+\usepackage{listings}
+\usepackage{linehighlight}
+\usepackage{color}
+\usepackage{xparse}
+\usepackage{xfp}
+
+\usepackage{blindtext}
+\usepackage{lipsum}
+
+\title{Introduction to eBPF}
+\author{Martin Ertsås\\ \texttt{martiert@gmail.com}}
+\date{\today}
+
+\usetheme{ciscolysaker}
+\setbeameroption{show notes on second screen=right}
+
+\definecolor{codehighlight}{rgb}{0.8, 0.95, 0.8}
+\definecolor{codebackground}{rgb}{0.9, 0.9, 0.9}
+
+
+\usepackage{graphicx}
+
+\lstdefinelanguage{diff}{
+ morecomment=[f][\color{Green}]{+},
+ morecomment=[f][\color{Red}]{-},
+}
+
+\lstdefinelanguage{asm}{
+  morekeywords={load, jmp, jeq, jge, jgt, ret},
+}
+\lstdefinestyle{cpp}{
+  language=C++,
+  morekeywords={
+    __u32,
+    __u64,
+    __s32,
+    __s64,
+    uint8_t,
+    uint16_t,
+    uint32_t,
+    uint64_t,
+    int8_t,
+    int16_t,
+    int32_t,
+    int64_t,
+  },
+}
+
+\lstset{
+ frame=single,
+ language=diff,
+ morekeywords={uint8_t, ssize_t},
+ keywordstyle=\color{Blue},
+ showspaces=false,
+ showstringspaces=false,
+ backgroundcolor=\color{codebackground},
+ literate={å}{{\aa}}1
+}
+\newenvironment{SplitView}[2]
+  {
+    \begin{columns}
+      \begin{column}{0.35\textwidth}
+        \centering
+        \includegraphics[width=\textwidth, keepaspectratio]{#1}
+      \end{column}
+      \begin{column}{0.65\textwidth}
+        {\Large\color{Blue}{#2}}
+        \vskip 1em
+  }
+  {
+      \end{column}
+    \end{columns}
+  }
+\newcommand{\demo}{\begin{frame}{DEMO!}\end{frame}}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+
+  \note{
+    \begin{itemize}
+      \item Ask questions whenever
+      \item Feel free to interrupt
+      \item If I forget breaks, shout out
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{\$ Whoami}
+    \centering
+    \lstinputlisting[basicstyle=\small]{examples/whoami.txt}
+  \end{SplitView}
+
+  \note{
+    \begin{itemize}
+      \item Works for Cisco Norway
+      \item Been working a couple years now with integrating chromium in our embedded devices
+      \item Mainly interested in systems programming, security, and training
+      \item Likes board games, RPG games, and cycling
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{I have no idea what I'm doing}
+    \begin{itemize}
+      \item<2-> I wanted to experiment with eBPF
+      \item<3-> So I submitted this talk
+      \item<4-> This might have been a mistake
+      \item<5-> Definitely do not use any code from this presentation
+      \item<6-> It will blow up in your face
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{What is eBPF?}
+    \begin{itemize}
+      \item A way to program the kernel without building a new kernel or writing kernel modules
+      \item A programing language, evaluated by the kernel
+      \item Event driven programs, running when the kernel passes a pre-defined hook
+      \item Can be controlled from userspace
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+    Write kernel features without:
+
+    \begin{itemize}
+      \item Modifying the kernel
+      \item Submit the patch upstream
+      \item Wait for kernel release
+      \item Wait for distro to pick up the new kernel
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{But, isn't running code in the kernel dangerous?}
+    \begin{itemize}
+      \item Runs through a verifyer on every program load
+      \item<2-> Process loading the eBPF program needs correct capabilities
+      \item<2-> The program does not crash or harm the system
+      \item<2-> The program runs to completion
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+  }
+\end{frame}
+
+% Implementing a simple ebpf program
+\demo
+
+\begin{frame}
+  \begin{SplitView}{images/Wictor.jpg}{Thank you}
+  \end{SplitView}
+\end{frame}
+
+\end{document}
