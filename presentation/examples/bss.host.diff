@@ -1,0 +1,6 @@
+ simple__attach(skeleton);
++
++skeleton->bss->parent_pid = atoi(argv[1]);
+ 
+ bool exiting = false;
+ while (!exiting)

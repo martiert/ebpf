@@ -161,6 +161,21 @@
 \end{frame}
 
 \begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Why would you like to use this?}
+    \begin{itemize}
+      \item Monitoring and tracing of processes
+      \item Network monitoring
+      \item Making network decisions
+      \item To be one of the cool kids
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+    Our use case was to put a specific process into a cgroup on creation, to limit its memory usage
+  }
+\end{frame}
+
+\begin{frame}
   \begin{SplitView}{images/mertsas.jpg}{Abstractions and tools}
     \begin{itemize}
       \item Foo
@@ -182,7 +197,27 @@
   }
 \end{frame}
 
-% Implementing a simple ebpf program
+\begin{frame}{Simple ebpf program}
+  \lstinputlisting[basicstyle=\small]{examples/simple.ebpf.c}
+
+  \note{
+    \begin{itemize}
+      \item $SEC$ defines an ELF section to use
+      \item A GPL compatible license is required
+      \item $BPF_CORE_READ$ reads entries from a struct
+      \item bpf\_probe\_read\_kernel\_str copies from an unsafe kernel address
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}{Simple loading program}
+  \lstinputlisting{examples/simple.host.c}
+
+  \note{
+    The simple\_\_ functions are auto generated from the ebp program using bpftool
+  }
+\end{frame}
+
 \demo{
   \begin{itemize}
     \item bpftool prog to show that it is loaded
@@ -190,9 +225,39 @@
   \end{itemize}
 }
 
-% Adding ppid to watch from userspace
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Userspace communication}
+    \begin{itemize}
+      \item .bss section
+      \item ebpf maps
+    \end{itemize}
+  \end{SplitView}
+\end{frame}
 
-% Adding communication to userspace
+\begin{frame}
+  \lstinputlisting[caption=ebpf]{examples/bss.diff}
+  \lstinputlisting[caption=host]{examples/bss.host.diff}
+
+  \note{
+    \begin{itemize}
+      \item Adding an integer to the .bss section
+      \item Using that from the ebpf program
+      \item Exposed in the skeleton on the host side
+      \item Pretty much one-way
+      \item Very limited
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{ebpf maps}
+    \begin{itemize}
+      \item Multiple map types
+    \end{itemize}
+  \end{SplitView}
+\end{frame}
+
+% Sending data back to userspace
 
 % Change ppid to a string
 
