@@ -77,7 +77,7 @@
       \end{column}
     \end{columns}
   }
-\newcommand{\demo}{\begin{frame}{DEMO!}\end{frame}}
+\newcommand{\demo}[1]{\begin{frame}{DEMO!}\note{#1}\end{frame}}
 
 \begin{document}
 
@@ -160,8 +160,41 @@
   }
 \end{frame}
 
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Abstractions and tools}
+    \begin{itemize}
+      \item Foo
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{C interface}
+    \begin{itemize}
+      \item Clang can compile to bpf programs
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+  }
+\end{frame}
+
 % Implementing a simple ebpf program
-\demo
+\demo{
+  \begin{itemize}
+    \item bpftool prog to show that it is loaded
+    \item cat /sys/kernel/debug/tracing/trace\_pipe
+  \end{itemize}
+}
+
+% Adding ppid to watch from userspace
+
+% Adding communication to userspace
+
+% Change ppid to a string
 
 \begin{frame}
   \begin{SplitView}{images/Wictor.jpg}{Thank you}
