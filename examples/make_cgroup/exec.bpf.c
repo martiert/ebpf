@@ -19,8 +19,8 @@ struct {
 struct {
     __uint(type, BPF_MAP_TYPE_HASH);
     __uint(max_entries, 32);
-    __type(key, __u64);
-    __type(value, __u64);
+    __uint(key_size, MAX_COMMAND);
+    __uint(value_size, sizeof(__u8));
 } exec_names SEC(".maps");
 
 SEC("tp/sched/sched_process_exec")
@@ -30,8 +30,7 @@ int handle_execve(struct trace_event_raw_sched_process_exec * ctx)
     unsigned fname_off;
     fname_off = ctx->__data_loc_filename & 0xFFFF;
     bpf_probe_read_str(event.command, MAX_COMMAND, (void*)ctx + fname_off);
-    unsigned long hash = hash_value(event.command);
-    if (bpf_map_lookup_elem(&exec_names, &hash)) {
+    if (bpf_map_lookup_elem(&exec_names, &(event.command))) {
         u64 tgid;
         struct task_struct * task = (struct task_struct*) bpf_get_current_task();
 

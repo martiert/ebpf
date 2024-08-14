@@ -7,6 +7,7 @@
 #include <sys/resource.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <stdint.h>
 
 #include <string>
 #include <map>
@@ -113,8 +114,11 @@ int main(int argc, char ** argv)
     Skeleton skeleton;
 
     for (auto const & [path, _] : cgroups) {
-        auto hash = hash_value(path.c_str());
-        bpf_map__update_elem(skeleton->maps.exec_names, (const void*)&hash, sizeof(unsigned long), (const void*)&hash, sizeof(unsigned long), BPF_NOEXIST);
+        char name[MAX_COMMAND];
+        memset(name, 0, MAX_COMMAND);
+        strncpy(name, path.c_str(), path.size());
+        uint8_t value = 1;
+        bpf_map__update_elem(skeleton->maps.exec_names, name, MAX_COMMAND, &value, sizeof(uint8_t), BPF_NOEXIST);
     }
 
     auto rb = skeleton.events([&cgroups, &cgroup_handler](event * e) {
