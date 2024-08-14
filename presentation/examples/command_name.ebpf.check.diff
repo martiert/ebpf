@@ -1,0 +1,10 @@
+-if (ppid != parent_pid)
++char command[MAX_COMMAND];
++bpf_probe_read_str(
++    command,
++    MAX_COMMAND,
++    (void*)ctx + argv1_offset);
++if (!bpf_map_lookup_elem(
++        &exec_names,
++        &command))
+   return 0;

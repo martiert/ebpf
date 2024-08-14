@@ -226,7 +226,7 @@
 }
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Userspace communication}
+  \begin{SplitView}{images/mertsas.jpg}{Communicate to userspace}
     \begin{itemize}
       \item .bss section
       \item ebpf maps
@@ -257,9 +257,57 @@
   \end{SplitView}
 \end{frame}
 
-% Sending data back to userspace
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Creating a map}
+    \lstinputlisting{examples/ringbuffer.define.diff}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}{Populating a ringbuffer from ebpf}
+  \lstinputlisting{examples/ringbuffer.bpf.diff}
+\end{frame}
+
+\begin{frame}{Reading a ringbuffer from ebpf}
+  \lstinputlisting{examples/ringbuffer.userspace.diff}
+\end{frame}
+
+\begin{frame}{Consuming data}
+  \lstinputlisting{examples/ringbuffer.callback.cpp}
+\end{frame}
+
+\demo{}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Communicating from userspace}
+    \begin{itemize}
+      \item Very similar to communicating to userspace
+      \item Can send over more complex types
+      \item Can easily keep several entries
+    \end{itemize}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Path of commands map}
+    \lstinputlisting{examples/command\_name.ebpf.diff}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Using the commands map}
+    \lstinputlisting{examples/command\_name.ebpf.check.diff}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Populating from userspace}
+    \lstinputlisting{examples/command\_name.userspace.diff}
+  \end{SplitView}
+\end{frame}
 
 % Change ppid to a string
+
+% Connect a network ebpf program to a cgroup
 
 \begin{frame}
   \begin{SplitView}{images/Wictor.jpg}{Thank you}

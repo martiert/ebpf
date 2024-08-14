@@ -1,0 +1,10 @@
+ } events SEC(".maps");
++
++struct {
++  __uint(type, BPF_MAP_TYPE_HASH);
++  __uint(max_entries, 32);
++  __uint(key_size, MAX_COMMAND);
++  __uint(value_size, sizeof(__u8));
++} exec_names SEC(".maps");
+ 
+ SEC("tp/sched/sched_process_exec")

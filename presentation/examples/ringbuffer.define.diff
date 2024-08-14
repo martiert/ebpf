@@ -1,0 +1,15 @@
+ SEC(".bss")
+ int parent_pid = 0;
+ 
++struct event {
++  int pid;
++  int ppid;
++  char command[MAX_COMMAND];
++};
++
++struct {
++  __uint(type, BPF_MAP_TYPE_RINGBUF);
++  __uint(max_entries, 256 * 1024);
++} events SEC(".maps");
++
+ SEC("tp/sched/sched_process_exec")

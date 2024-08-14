@@ -1,0 +1,9 @@
+ Skeleton skeleton;
+-skeleton->bss->ppid = atoi(argv[1]);
++char name[MAX_COMMAND];
++strncpy(name, argv[1], MAX_COMMAND);
++uint8_t value = 1;
++bpf_map__update_elem(
++    skeleton->maps.exec_names,
++    name, MAX_COMMAND,
++    &value, sizeof(uint8_t));
