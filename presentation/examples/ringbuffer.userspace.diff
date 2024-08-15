@@ -1,10 +1,12 @@
  Skeleton skeleton;
- skeleton->bss->parent_pid = atoi(argv[1]);
-+int fd = bpf_map__fd(skeleton->maps.events);
-+auto rb = ring_buffer_new(fd, callback, NULL, NULL);
+ skeleton->bss->ppid = atoi(argv[1]);
++int fd = bpf_map__fd(
++       skeleton->maps.events);
++auto rb = ring_buffer_new(
++       fd, callback, NULL, NULL);
 
  while (!exiting)
 -  sleep(1);
 +  ring_buffer__consume(rb);
 +
-+ ring_buffer__free(rb);
++ring_buffer__free(rb);

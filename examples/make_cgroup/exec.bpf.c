@@ -49,16 +49,7 @@ int handle_execve(struct trace_event_raw_sched_process_exec * ctx)
 SEC("tp/sched/sched_process_exit")
 int handle_exit(struct trace_event_raw_sched_process_template * ctx)
 {
-    pid_t pid, tid;
-    u64 id;
-    id = bpf_get_current_pid_tgid();
-    pid = id >> 32;
-    tid = (u32) id;
-    // Ignore thread exits
-    if (pid != tid)
-        return 0;
-
-    pid_t * found = bpf_map_lookup_elem(&monitored, &pid);
+    pid_t pid = bpf_get_current_pid_tgid() >> 32;
     if (bpf_map_delete_elem(&monitored, &pid) != 0)
         return 0;
 

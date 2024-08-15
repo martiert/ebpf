@@ -1,15 +1,13 @@
- if (ppid != parent_pid)
-     return 0;
-
--char command[MAX_COMMAND];
--bpf_probe_read_str(command, MAX_COMMAND
+ char command[MAX_COMMAND];
+ bpf_probe_read_kernel_str(command,
+        MAX_COMMAND,
+        ctx + argv1_offset);
 +struct event e;
 +e.pid = pid;
 +e.ppid = ppid;
-+bpf_probe_read_str(e.command, MAX_COMMAND,
-    ctx + (ctx->__data_loc_filename & 0xFFFF));
-+bpf_ringbuf_output(&events, &e, sizeof e, 0);
--bpf_printk("Execing %s pid: %d ppid: %d", command, pid, ppid);
++e.command = command;
++bpf_ringbuf_output(&events, &e,
++       sizeof e, 0);
+-bpf_printk(...);
 
  return 0;
-

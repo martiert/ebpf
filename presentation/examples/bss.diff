@@ -1,8 +1,9 @@
-+SEC(".bss") int parent_pid = 0;
++SEC(".bss") int ppid = 0;
 +
  SEC("tp/sched/sched_process_exec")
  ...
-+int ppid = BPF_CORE_READ(task, real_parent, tgid);
++int parent_pid = BPF_CORE_READ(task,
++        real_parent, tgid);
 +if (ppid != parent_pid)
 +  return 0;
  
