@@ -182,6 +182,7 @@
       \item bpftool
       \item bcc
       \item clang
+      \item netlink
     \end{itemize}
   \end{SplitView}
 
@@ -312,7 +313,75 @@
 
 \demo{}
 
-% Internal communication between exec and exit
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Putting the process into a cgroup}
+    \begin{itemize}
+      \item Can easily be done in userspace at this point
+      \item Need to clean up when it exits
+      \item Add a program for system exit
+      \item Keep a map to communicate between the two programs
+    \end{itemize}
+  \end{SplitView}
+
+  \note{
+    Going to be lazy and not show it
+
+    Show an example of a run, and show the folder that is created
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Internal monitoring map}
+    \lstinputlisting{examples/monitor\_map.diff}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Populate monitoring}
+    \lstinputlisting{examples/monitor\_populate.diff}
+  \end{SplitView}
+
+  \note{
+    bpf\_map\_update\_elem NOEXIST only updates if the key doesn't exist.
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Handling exit syscall}
+    \lstinputlisting[language=C]{examples/sched\_process\_exit.c}
+  \end{SplitView}
+
+  \note{
+    First thing we do is try to remove the pid from the list of monitored pids
+
+    If we fail to remove it, it doesn't exist and we exit
+
+    Send an exit event for the pid to userspace
+
+    Userspace can then use the new type enum to remove the cgroup folder
+  }
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Currently only used tracepoints}
+    \begin{itemize}
+      \item Can connect programs to the cgroup itself
+      \item Or to a network interface+++
+    \end{itemize}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Connecting ingress and egress}
+    \lstinputlisting[language=C]{examples/attach\_cgroup.c}
+  \end{SplitView}
+\end{frame}
+
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{cgroup network programs}
+    \lstinputlisting[basicstyle=\small]{examples/cgroup\_network.diff}
+  \end{SplitView}
+\end{frame}
 
 % Connect a network ebpf program to a cgroup
 

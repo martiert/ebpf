@@ -1,0 +1,18 @@
++SEC(".bss")
++bool drop = false;
++
++SEC("cgroup_skb/egress")
++int cgroup_egress(struct __sk_buff *skb)
++{
++    if (drop)
++        return 0;
++    return 1;
++}
++
++SEC("cgroup_skb/ingress")
++int cgroup_ingress(struct __sk_buff *skb)
++{
++    if (drop)
++        return 0;
++    return 1;
++}

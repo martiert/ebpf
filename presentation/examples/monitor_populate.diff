@@ -1,0 +1,9 @@
+ e.pid = pid;
+ e.ppid = ppid;
+ e.command = command;
++
++bpf_map_update_elem(&monitored,
++       &pid, &pid, BPF_NOEXIST);
+ 
+ bpf_ringbuf_output(&events, &e,
+        sizeof e, 0);
