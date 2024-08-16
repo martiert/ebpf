@@ -29,7 +29,7 @@ int handle_execve(struct trace_event_raw_sched_process_exec * ctx)
     struct event event={0};
     unsigned fname_off;
     fname_off = ctx->__data_loc_filename & 0xFFFF;
-    bpf_probe_read_str(event.command, MAX_COMMAND, (void*)ctx + fname_off);
+    bpf_probe_read_kernel_str(event.command, MAX_COMMAND, (void*)ctx + fname_off);
     if (bpf_map_lookup_elem(&exec_names, &(event.command))) {
         u64 tgid;
         struct task_struct * task = (struct task_struct*) bpf_get_current_task();

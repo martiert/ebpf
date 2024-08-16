@@ -16,7 +16,7 @@ int handle_execve(struct trace_event_raw_sched_process_exec * ctx)
     char command[MAX_COMMAND];
     unsigned fname_off;
     fname_off = ctx->__data_loc_filename & 0xFFFF;
-    bpf_probe_read_str(command, MAX_COMMAND, (void*)ctx + fname_off);
+    bpf_probe_read_kernel_str(command, MAX_COMMAND, (void*)ctx + fname_off);
 
     bpf_printk("Execing %s pid: %d ppid: %d", command, pid, ppid);
     return 0;

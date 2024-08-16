@@ -1,6 +1,6 @@
 -if (ppid != parent_pid)
 +char command[MAX_COMMAND];
-+bpf_probe_read_str(
++bpf_probe_read_kernel_str(
 +    command,
 +    MAX_COMMAND,
 +    (void*)ctx + argv1_offset);

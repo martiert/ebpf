@@ -31,7 +31,7 @@ int handle_execve(struct trace_event_raw_sched_process_exec * ctx)
     struct event e;
     e.pid = pid;
     e.ppid = ppid;
-    bpf_probe_read_str(e.command, MAX_COMMAND, (void*)ctx + fname_off);
+    bpf_probe_read_kernel_str(e.command, MAX_COMMAND, (void*)ctx + fname_off);
     bpf_ringbuf_output(&events, &e, sizeof e, 0);
 
     return 0;
