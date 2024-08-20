@@ -67,7 +67,7 @@
     \begin{columns}
       \begin{column}{0.35\textwidth}
         \centering
-        \includegraphics[width=\textwidth, keepaspectratio]{#1}
+        \includegraphics[height=0.8\textheight, width=\textwidth, keepaspectratio]{#1}
       \end{column}
       \begin{column}{0.65\textwidth}
         {\Large\color{Blue}{#2}}
@@ -77,6 +77,22 @@
       \end{column}
     \end{columns}
   }
+\newenvironment{RotateSplitView}[2]
+  {
+    \begin{columns}
+      \begin{column}{0.35\textwidth}
+        \centering
+        \includegraphics[angle=90, height=0.8\textheight, width=\textwidth, keepaspectratio]{#1}
+      \end{column}
+      \begin{column}{0.65\textwidth}
+        {\Large\color{Blue}{#2}}
+        \vskip 1em
+  }
+  {
+      \end{column}
+    \end{columns}
+  }
+
 \newcommand{\demo}[1]{\begin{frame}{DEMO!}\note{#1}\end{frame}}
 
 \begin{document}
@@ -110,7 +126,7 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{I have no idea what I'm doing}
+  \begin{SplitView}{images/important.jpg}{I have no idea what I'm doing}
     \begin{itemize}
       \item<2-> I wanted to experiment with eBPF
       \item<2-> So I submitted this talk
@@ -125,7 +141,7 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{What is eBPF?}
+  \begin{SplitView}{images/question.jpg}{What is eBPF?}
     \begin{itemize}
       \item A way to program the kernel without building a new kernel or writing kernel modules
       \item A programing language, evaluated by the kernel
@@ -147,21 +163,34 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Can I harm the kernel?}
+  \begin{SplitView}{images/break wall.png}{Can I harm the kernel?}
     \begin{itemize}
-      \item Runs through a verifyer on every program load
       \item Process loading the eBPF program needs correct capabilities
-      \item The program does not crash or harm the system
-      \item The program runs to completion
+      \item Runs through a verifyer on every program load
+        \begin{itemize}
+          \item The program does not crash or harm the system
+          \item No use of uninitialized memory
+          \item Program is withing size limit
+          \item Program has finite complexity
+        \end{itemize}
+      \item Memory for ebpf program itself is read-only
+      \item Runs in an protected execution context
     \end{itemize}
   \end{SplitView}
 
   \note{
+    \begin{itemize}
+      \item Mainly need CAP\_BPF, can also allow unprivileged for certain hooks
+      \item Finite complexity means we for instance can't have infinite loops and we always run to completion
+      \item Not possible to modify ebpf program
+      \item No access to arbitrary kernel memory
+      \item Need to use helper functions to get memory outside of execution context
+    \end{itemize}
   }
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Why would you like to use this?}
+  \begin{SplitView}{images/question.jpg}{Why would you like to use this?}
     \begin{itemize}
       \item Monitoring and tracing of processes
       \item Network monitoring
@@ -175,8 +204,13 @@
   }
 \end{frame}
 
+\begin{frame}{ebpf architecture}
+  \centering
+  \includegraphics[width=0.7\textwidth, keepaspectratio]{images/ebpf.png}
+\end{frame}
+
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Abstractions and tools}
+  \begin{RotateSplitView}{images/chaos.png}{Abstractions and tools}
     \begin{itemize}
       \item libbpf
       \item bpftool
@@ -184,7 +218,7 @@
       \item clang
       \item netlink
     \end{itemize}
-  \end{SplitView}
+  \end{RotateSplitView}
 
   \note{
   }
@@ -219,7 +253,7 @@
 }
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Communicate to userspace}
+  \begin{SplitView}{images/phone.png}{Communicate to userspace}
     \begin{itemize}
       \item .bss section
       \item ebpf maps
@@ -228,14 +262,9 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{ebpf modification}
-    \lstinputlisting{examples/bss.diff}
-  \end{SplitView}
-\end{frame}
-
-\begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{userspace modification}
-    \lstinputlisting{examples/bss.host.diff}
+  \begin{SplitView}{images/chain.png}{}
+    \lstinputlisting[caption=ebpf]{examples/bss.diff}
+    \lstinputlisting[caption=userspace]{examples/bss.host.diff}
   \end{SplitView}
 
   \note{
@@ -250,7 +279,7 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{ebpf maps}
+  \begin{SplitView}{images/map.png}{ebpf maps}
     \begin{itemize}
       \item Multiple map types
     \end{itemize}
@@ -258,19 +287,19 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Creating a map}
+  \begin{SplitView}{images/map.png}{Creating a map}
     \lstinputlisting{examples/ringbuffer.define.diff}
   \end{SplitView}
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Creating a map}
+  \begin{SplitView}{images/map.png}{Creating a map}
     \lstinputlisting{examples/ringbuffer.bpf.diff}
   \end{SplitView}
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Reading a ringbuffer from ebpf}
+  \begin{SplitView}{images/map.png}{Reading a ringbuffer from ebpf}
     \lstinputlisting{examples/ringbuffer.userspace.diff}
   \end{SplitView}
 \end{frame}
@@ -284,7 +313,7 @@
 \demo{}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Communicating from userspace}
+  \begin{SplitView}{images/phone.png}{Communicating from userspace}
     \begin{itemize}
       \item Very similar to communicating to userspace
       \item Can send over more complex types
@@ -294,19 +323,19 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Path of commands map}
+  \begin{SplitView}{images/phone.png}{Path of commands map}
     \lstinputlisting{examples/command\_name.ebpf.diff}
   \end{SplitView}
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Using the commands map}
+  \begin{SplitView}{images/phone.png}{Using the commands map}
     \lstinputlisting{examples/command\_name.ebpf.check.diff}
   \end{SplitView}
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Populating from userspace}
+  \begin{SplitView}{images/phone.png}{Populating from userspace}
     \lstinputlisting{examples/command\_name.userspace.diff}
   \end{SplitView}
 \end{frame}
@@ -372,18 +401,16 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Connecting ingress and egress}
-    \lstinputlisting[language=C]{examples/attach\_cgroup.c}
-  \end{SplitView}
-\end{frame}
-
-\begin{frame}
   \begin{SplitView}{images/mertsas.jpg}{cgroup network programs}
     \lstinputlisting[basicstyle=\small]{examples/cgroup\_network.diff}
   \end{SplitView}
 \end{frame}
 
-% Connect a network ebpf program to a cgroup
+\begin{frame}
+  \begin{SplitView}{images/mertsas.jpg}{Connecting ingress and egress}
+    \lstinputlisting[language=C]{examples/attach\_cgroup.c}
+  \end{SplitView}
+\end{frame}
 
 \begin{frame}
   \begin{SplitView}{images/Wictor.jpg}{Thank you}

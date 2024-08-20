@@ -1,6 +1,4 @@
  simple__attach(skeleton);
-+
 +skeleton->bss->ppid = atoi(argv[1]);
  
  bool exiting = false;
- while (!exiting)
