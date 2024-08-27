@@ -1,0 +1,13 @@
+# Move started program in a cgroup
+- A hardcoded parent pid to compare against
+- Feedback to userspace
+- Use a bss flag to set the parent pid to watch
+- Use a hardcoded string of a path to compare against
+- Allow to send in the hardcoded string
+- Cleanup when watched pid exits
+
+# Network watching
+- Send to socks proxy?
+- DNS firewall?
+- Force DNS server?
+- load balancing?
