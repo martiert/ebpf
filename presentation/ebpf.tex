@@ -221,6 +221,15 @@
   \end{RotateSplitView}
 
   \note{
+    \begin{itemize}
+      \item C library for writing and interacting with bpf programs
+      \item Tool for inspecting and simple manipulation of ebpg programs and maps
+      \item Toolkit for creating ebpf programs with a python/lua frontend
+      \item Compiler that can create bpf programs
+      \item A socket type to communicate with the kernel
+      \item Use the ip tool instead (which uses netlink)
+    \end{itemize}
+
   }
 \end{frame}
 
@@ -376,8 +385,8 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Handling exit syscall}
-    \lstinputlisting[language=C]{examples/sched\_process\_exit.c}
+  \begin{SplitView}{images/exit.png}{Handling exit syscall}
+    \lstinputlisting[basicstyle=\small, language=C]{examples/sched\_process\_exit.c}
   \end{SplitView}
 
   \note{
@@ -392,7 +401,7 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Currently only used tracepoints}
+  \begin{SplitView}{images/tracepoints.png}{Currently only used tracepoints}
     \begin{itemize}
       \item Can connect programs to the cgroup itself
       \item Or to a network interface+++
@@ -401,13 +410,13 @@
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{cgroup network programs}
+  \begin{SplitView}{images/network.png}{cgroup network programs}
     \lstinputlisting[basicstyle=\small]{examples/cgroup\_network.diff}
   \end{SplitView}
 \end{frame}
 
 \begin{frame}
-  \begin{SplitView}{images/mertsas.jpg}{Connecting ingress and egress}
+  \begin{SplitView}{images/network.png}{Connecting ingress and egress}
     \lstinputlisting[language=C]{examples/attach\_cgroup.c}
   \end{SplitView}
 \end{frame}
