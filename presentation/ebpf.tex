@@ -255,9 +255,12 @@
 \end{frame}
 
 \demo{
+  logging
+
   \begin{itemize}
     \item bpftool prog to show that it is loaded
     \item cat /sys/kernel/debug/tracing/trace\_pipe
+    \item bpftool gen skeleton out/exec.bpf.o name exec
   \end{itemize}
 }
 
@@ -319,7 +322,7 @@
   \end{SplitView}
 \end{frame}
 
-\demo{}
+\demo{userspace\_notification}
 
 \begin{frame}
   \begin{SplitView}{images/phone.png}{Communicating from userspace}
@@ -348,8 +351,6 @@
     \lstinputlisting{examples/command\_name.userspace.diff}
   \end{SplitView}
 \end{frame}
-
-\demo{}
 
 \begin{frame}
   \begin{SplitView}{images/cgroups.png}{Putting the process into a cgroup}
@@ -399,6 +400,8 @@
     Userspace can then use the new type enum to remove the cgroup folder
   }
 \end{frame}
+
+\demo{make\_cgroup}
 
 \begin{frame}
   \begin{SplitView}{images/tracepoints.png}{Currently only used tracepoints}
